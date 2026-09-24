@@ -5,3 +5,7 @@ dockerfilePath = "Dockerfile"
 [deploy]
 startCommand = ""
 healthcheckPath = "/"
+
+[networking]
+[networking.serviceDomains]
+"mahajanapadas-2-production.up.railway.app" = { port = 80 }
