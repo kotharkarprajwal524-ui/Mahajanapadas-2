@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mahajanapada: 800 BCE</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header>
+  <div>
+    <h1>MAHAJANAPADA</h1>
+    <div class="subtitle">800 BCE • Indian Subcontinent • Capital Wars</div>
+  </div>
+  <div class="turnbox">
+    <div>YEAR</div><strong id="year">800 BCE</strong>
+    <button id="endTurn">End Turn</button>
+  </div>
+</header>
+
+<main>
+  <section class="mapPanel">
+    <div class="panelTitle">THE SUBCONTINENT</div>
+    <svg id="map" viewBox="0 0 900 600" aria-label="schematic map"></svg>
+    <div class="legend">
+      <span><i class="dot player"></i>Your capital</span>
+      <span><i class="dot enemy"></i>Other capital</span>
+      <span><i class="dot ally"></i>Allied capital</span>
+      <span>Click a capital to select it.</span>
+    </div>
+  </section>
+
+  <aside class="side">
+    <div class="card">
+      <div class="cardTitle">YOUR KINGDOM</div>
+      <select id="factionSelect"></select>
+      <div id="kingdomStats"></div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">SELECTED CAPITAL</div>
+      <div id="selectedInfo">Select a capital on the map.</div>
+      <div id="actions"></div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">DIPLOMACY</div>
+      <div id="diplomacy"></div>
+    </div>
+
+    <div class="card">
+      <div class="cardTitle">EVENT LOG</div>
+      <div id="log"></div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <span>Single-player grand strategy prototype</span>
+  <span>Capitals only • Economy • Armies • Diplomacy • Battles • AI</span>
+</footer>
+<script src="game.js"></script>
+</body>
+</html>
