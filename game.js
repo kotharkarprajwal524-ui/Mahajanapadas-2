@@ -38,8 +38,8 @@ function render(){
 }
 function renderMap(){
  const svg=document.getElementById("map");
- const rivers=`<path d="M40 220 Q250 180 410 250 T760 350" fill="none" stroke="#4e7890" stroke-width="9" opacity=".45"/><path d="M300 30 Q330 150 355 300 T470 560" fill="none" stroke="#4e7890" stroke-width="6" opacity=".4"/><path d="M520 50 Q510 180 555 310 T610 560" fill="none" stroke="#4e7890" stroke-width="5" opacity=".35"/>`;
- svg.innerHTML=`<rect width="900" height="600" fill="#26352e"/><path d="M95 70 L170 25 270 35 355 75 440 50 535 90 650 100 760 160 830 260 790 365 830 480 720 550 600 575 500 550 410 580 315 535 220 490 150 420 105 310Z" fill="#304235" stroke="#8a805f" stroke-width="2"/>${rivers}<text x="700" y="565" fill="#aeb7a4" font-size="15">Indian Subcontinent</text>`;
+ const rivers=`<path d="M150 200 Q200 180 280 200 Q350 190 420 220 Q480 240 550 280 Q620 320 680 380" fill="none" stroke="#4e7890" stroke-width="8" opacity=".5"/><path d="M200 100 Q220 200 240 320 Q250 420 280 520" fill="none" stroke="#4e7890" stroke-width="6" opacity=".45"/><path d="M550 80 Q560 200 580 350 Q600 480 640 560" fill="none" stroke="#4e7890" stroke-width="5" opacity=".4"/>`;
+ svg.innerHTML=`<rect width="900" height="600" fill="#26352e"/><path d="M80 120 L150 60 220 50 300 65 380 75 480 70 580 85 680 110 760 160 820 240 830 340 820 420 800 500 720 560 620 580 500 570 380 560 280 550 180 520 120 440 85 340 75 240Z" fill="#304235" stroke="#8a805f" stroke-width="2"/>${rivers}<text x="620" y="580" fill="#aeb7a4" font-size="14">Indian Subcontinent • 800 BCE</text>`;
  factions.forEach((f,i)=>{
    const k=state.kingdoms[f.name], isPlayer=i===state.player, isSel=i===state.selected;
    const color=isPlayer?"#e2c66c":(k.owner===state.player?"#6da77a":"#b86b63");
@@ -64,8 +64,8 @@ function renderSelected(){
  if(f.name===player().name){a.innerHTML=`<div class="actiongrid">
  <button onclick="farm()">Expand farms<br>−20 gold</button><button onclick="recruit()">Recruit army<br>−25 gold</button>
  <button onclick="fortify()">Fortify capital<br>−20 gold</button><button onclick="festival()">Hold festival<br>−15 gold</button></div>`;return}
- if(k.owner===state.player){a.innerHTML=`<div class="actiongrid"><button onclick="moveArmy()">Move army here</button></div>`;return}
- a.innerHTML=`<div class="actiongrid"><button class="good" onclick="diplomacy(15)">Offer friendship</button><button onclick="trade()">Trade pact</button><button class="danger" onclick="declareWar()">Declare war</button><button onclick="attack()">Attack capital</button></div>`;
+ if(k.owner===state.player){a.innerHTML=`<div class="actiongrid"><button onclick="moveArmy()">Reinforce this capital<br>Move 40% of army</button></div>`;return}
+ a.innerHTML=`<div class="actiongrid"><button class="good" onclick="diplomacy(15)">Offer friendship</button><button onclick="trade()">Trade pact</button><button class="danger" onclick="declareWar()">Declare war</button><button onclick="attack()">Attack</button><button class="danger" onclick="recapture()">Recapture</button></div>`;
 }
 function renderDiplomacy(){
  const el=document.getElementById("diplomacy");
@@ -78,10 +78,11 @@ function renderLog(){document.getElementById("log").innerHTML=state.log.map(x=>`
 function selectFaction(i){state.selected=i;render()}
 function spend(k,n){if(k.gold<n){log("Not enough gold.");return false}k.gold-=n;return true}
 function farm(){const k=player();if(spend(k,20)){k.food+=45;k.pop+=3;log(`Farm expansion increased food and population in ${k.capital}.`);render()}}
-function recruit(){const k=player();if(spend(k,25)){k.army+=18;k.food-=8;log(`18 troops recruited in ${k.capital}.`);render()}}
+function recruit(){const k=player();if(k.food<8){log("Not enough food to recruit.");return}if(spend(k,25)){k.army+=18;k.food-=8;log(`18 troops recruited in ${k.capital}.`);render()}}
 function fortify(){const k=player();if(spend(k,20)){k.fort=Math.min(100,k.fort+18);log(`${k.capital} was fortified.`);render()}}
 function festival(){const k=player();if(spend(k,15)){k.stability=Math.min(100,k.stability+12);log(`A festival improved stability.`);render()}}
 function diplomacy(v){const f=selected();if(f.name===player().name)return;setRel(player().name,f.name,Math.min(100,rel(player().name,f.name)+v));log(`${f.name} relations improved.`);render()}
+function recapture(){const target=selected(),tk=state.kingdoms[target.name],pk=player();if(target.name===pk.name||tk.owner===state.player){log("That capital is already yours.");return}if(rel(pk.name,target.name)>-20){log("Must declare war first.");return}if(pk.army<15){log("Need at least 15 troops to recapture.");return}const attackPower=pk.army*(0.65+Math.random()*0.55);const defensePower=tk.army*(0.55+Math.random()*0.45)+tk.fort*.8;const loss=Math.max(5,Math.floor(pk.army*(0.15+Math.random()*.18)));pk.army=Math.max(0,pk.army-loss);if(attackPower>defensePower){tk.owner=state.player;tk.fort=Math.max(10,Math.floor(tk.fort*.25));tk.stability=50;pk.army=Math.max(8,pk.army+Math.floor(tk.army*.25));log(`Recaptured ${target.capital}!`);}else{tk.army=Math.max(5,Math.floor(tk.army-loss*.7));log(`Recapture failed at ${target.capital}. Lost ${loss} troops.`)}checkVictory();render()}
 function trade(){const f=selected();const k=player();if(spend(k,10)){setRel(player().name,f.name,Math.min(100,rel(player().name,f.name)+8));k.gold+=20;log(`Trade with ${f.name} brought 20 gold.`);render()}}
 function declareWar(){const f=selected();setRel(player().name,f.name,-100);log(`War declared on ${f.name}.`);render()}
 function attack(){
@@ -100,7 +101,7 @@ function attack(){
  }else{tk.army=Math.max(5,Math.floor(tk.army-loss*.7));log(`Battle failed at ${target.capital}. Your army lost ${loss} troops.`)}
  checkVictory();render();
 }
-function moveArmy(){log("Armies can operate across the capital network; use attacks to take enemy capitals.");}
+function moveArmy(){const pk=player();const owned=factions.filter((f,i)=>state.kingdoms[f.name].owner===state.player&&f.name!==pk.name);if(owned.length===0){log("No other capitals to reinforce.");return}const dest=owned[Math.floor(Math.random()*owned.length)];const dk=state.kingdoms[dest.name];const move=Math.min(Math.floor(pk.army*0.4),50);pk.army-=move;dk.army+=move;log(`${move} troops moved to ${dest.capital}.`);render()}
 function aiTurn(){
  factions.forEach((f,i)=>{
    if(i===state.player)return;
