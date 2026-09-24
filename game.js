@@ -39,7 +39,7 @@ function render(){
 function renderMap(){
  const svg=document.getElementById("map");
  const rivers=`<path d="M40 220 Q250 180 410 250 T760 350" fill="none" stroke="#4e7890" stroke-width="9" opacity=".45"/><path d="M300 30 Q330 150 355 300 T470 560" fill="none" stroke="#4e7890" stroke-width="6" opacity=".4"/><path d="M520 50 Q510 180 555 310 T610 560" fill="none" stroke="#4e7890" stroke-width="5" opacity=".35"/>`;
- svg.innerHTML=`<rect width="900" height="600" fill="#26352e"/><path d="M95 70 L170 25 270 35 355 75 440 50 535 90 650 100 760 160 830 260 790 365 830 480 720 550 600 575 500 550 410 580 315 535 220 490 150 420 105 310Z" fill="#304235" stroke="#8a805f" stroke-width="2"/>${rivers}<text x="700" y="565" fill="#aeb7a4" font-size="15">Indian Subcontinent</text>`;
+ svg.innerHTML=`<rect width="900" height="600" fill="#26352e"/><path d="M175 45 L215 60 250 50 285 65 320 55 360 70 395 60 425 80 455 75 480 95 505 90 530 110 555 105 580 130 600 160 615 195 605 225 625 255 615 285 630 315 618 345 632 375 615 400 598 430 582 455 565 480 548 500 558 525 538 545 515 560 495 545 480 565 460 550 445 575 428 555 415 575 398 550 405 520 385 500 392 470 370 450 378 420 358 400 365 375 345 355 352 330 332 310 340 285 320 265 328 240 308 220 298 195 282 175 265 155 250 135 232 118 215 100 198 80 180 65Z" fill="#304235" stroke="#8a805f" stroke-width="2"/>${rivers}<text x="700" y="565" fill="#aeb7a4" font-size="15">Indian Subcontinent</text>`;
  factions.forEach((f,i)=>{
    const k=state.kingdoms[f.name], isPlayer=i===state.player, isSel=i===state.selected;
    const color=isPlayer?"#e2c66c":(k.owner===state.player?"#6da77a":"#b86b63");
@@ -78,7 +78,7 @@ function renderLog(){document.getElementById("log").innerHTML=state.log.map(x=>`
 function selectFaction(i){state.selected=i;render()}
 function spend(k,n){if(k.gold<n){log("Not enough gold.");return false}k.gold-=n;return true}
 function farm(){const k=player();if(spend(k,20)){k.food+=45;k.pop+=3;log(`Farm expansion increased food and population in ${k.capital}.`);render()}}
-function recruit(){const k=player();if(spend(k,25)){k.army+=18;k.food-=8;log(`18 troops recruited in ${k.capital}.`);render()}}
+function recruit(){const k=player();if(k.food<8){log("Not enough food to recruit.");return}if(spend(k,25)){k.army+=18;k.food-=8;log(`18 troops recruited in ${k.capital}.`);render()}}
 function fortify(){const k=player();if(spend(k,20)){k.fort=Math.min(100,k.fort+18);log(`${k.capital} was fortified.`);render()}}
 function festival(){const k=player();if(spend(k,15)){k.stability=Math.min(100,k.stability+12);log(`A festival improved stability.`);render()}}
 function diplomacy(v){const f=selected();if(f.name===player().name)return;setRel(player().name,f.name,Math.min(100,rel(player().name,f.name)+v));log(`${f.name} relations improved.`);render()}
@@ -94,13 +94,23 @@ function attack(){
  const loss=Math.max(5,Math.floor(pk.army*(0.15+Math.random()*.18)));
  pk.army=Math.max(0,pk.army-loss);
  if(attackPower>defensePower){
-   tk.owner=state.player; tk.fort=Math.max(8,Math.floor(tk.fort*.35)); tk.stability=45;
+   tk.owner=state.player; tk.fort=Math.max(8,Math.floor(tk.fort*.35)); tk.stability=Math.max(40,Math.floor(tk.stability*0.5));
    pk.army=Math.max(5,pk.army+Math.floor(tk.army*.25));
    log(`Victory! ${target.capital} has fallen to ${pk.name}.`);
  }else{tk.army=Math.max(5,Math.floor(tk.army-loss*.7));log(`Battle failed at ${target.capital}. Your army lost ${loss} troops.`)}
  checkVictory();render();
 }
-function moveArmy(){log("Armies can operate across the capital network; use attacks to take enemy capitals.");}
+function moveArmy(){
+ const f=selected(), tk=state.kingdoms[f.name], pk=player();
+ if(f.name===pk.name){log("Select another capital you own to move troops there.");return}
+ if(tk.owner!==state.player){log("You can only move troops between your own capitals.");return}
+ if(pk.army<10){log("Not enough troops in the capital to spare a detachment.");return}
+ const moved=Math.min(5,pk.army-5);
+ if(moved<=0){log("Not enough troops to move without leaving the capital undefended.");return}
+ pk.army-=moved; tk.army+=moved;
+ log(`${moved} troops moved from ${pk.capital} to ${f.capital}.`);
+ render();
+}
 function aiTurn(){
  factions.forEach((f,i)=>{
    if(i===state.player)return;
